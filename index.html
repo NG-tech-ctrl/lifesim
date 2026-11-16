@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Simulator: Real Life Edition</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131c2e;
+            --card-border: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #38bdf8;
+            --accent-success: #4ade80;
+            --accent-warning: #facc15;
+            --accent-purple: #c084fc;
+            --accent-danger: #f87171;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin: 0;
+            color: var(--accent-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* OS Header Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            text-align: center;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            padding: 12px 8px;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--accent-success);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .progress-bar-container {
+            background: var(--card-border);
+            border-radius: 6px;
+            height: 8px;
+            width: 100%;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background: var(--accent-primary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons & Inputs */
+        button {
+            background-color: var(--accent-primary);
+            color: #0b0f19;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .output-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--card-border);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        /* Spinning Wheel Layout */
+        .wheel-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        canvas {
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            background: var(--bg-color);
+        }
+
+        /* Grid for Hygiene Protocols */
+        .protocols-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .protocol-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--card-border);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .protocol-title {
+            font-weight: bold;
+            color: var(--accent-warning);
+            margin-bottom: 4px;
+        }
+
+        /* Flex lists for items */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .item-row button {
+            width: auto;
+            margin: 0;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        textarea {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 480px) {
+            .protocols-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Life Simulator</h1>
+        <div class="subtitle">Real Life Edition • Character & Business OS</div>
+    </header>
+
+    <!-- OS Status Panel -->
+    <div class="card">
+        <h2>📊 Character & Business OS</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value" id="level-val">1</div>
+                <div class="stat-label">Level</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="xp-val">0</div>
+                <div class="stat-label">Total XP</div>
+            </div>
+            <div class="stat-box" style="color: var(--accent-warning);">
+                <div class="stat-value" id="coins-val" style="color: var(--accent-warning);">0</div>
+                <div class="stat-label">Coins 🪙</div>
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 0.8rem; display: flex; justify-content: space-between; color: var(--text-muted);">
+            <span id="level-progress-text">Level Progress: 0 / 100 XP</span>
+            <span id="next-level-target">Next: Lvl 2</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="xp-progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Daily Energy Bar Calculator -->
+    <div class="card">
+        <h2>⚡ Daily Energy Bar Calculator</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox" class="energy-check" value="3" onchange="calculateEnergy()"> Slept 6-8 hours restfully? (+3 EP)</label>
+            <label><input type="checkbox" class="energy-check" value="2" onchange="calculateEnergy()"> Eaten meal & hydrated? (+2 EP)</label>
+            <label><input type="checkbox" class="energy-check" value="3" onchange="calculateEnergy()"> Low pain / discomfort? (+3 EP)</label>
+            <label><input type="checkbox" class="energy-check" value="2" onchange="calculateEnergy()"> Clear mental focus? (+2 EP)</label>
+        </div>
+        <div class="output-box" id="energy-result">
+            <strong>Energy Capacity (EP) 0 / 10 EP</strong><br>
+            Check off your morning state to calculate today's recommended quest intensity.
+        </div>
+    </div>
+
+    <!-- Hygiene Protocol Selector -->
+    <div class="card">
+        <h2>🧼 Hygiene Protocol Selector</h2>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+            Choose the appropriate maintenance based on today's EP capacity:
+        </div>
+        <div class="protocols-grid">
+            <div class="protocol-card">
+                <div class="protocol-title">🚿 Full Shower Protocol</div>
+                <div><strong>High EP</strong><br>Full shower, hair care, teeth brushing, clean clothes reset.</div>
+            </div>
+            <div class="protocol-card">
+                <div class="protocol-title">🧻 Wipe-Down Protocol</div>
+                <div><strong>Med / Low EP</strong><br>Baby wipes/washcloth for high-contact areas, face wash, deodorant.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Season & Quest Board -->
+    <div class="card">
+        <h2>🎯 Season & Quest Board</h2>
+        <div style="margin-bottom: 12px;">
+            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Active Season:</label>
+            <select id="season-select" onchange="updateSeasonInfo()">
+                <option value="Season 1: Home Support Business Setup (Target Switch: Apr 15)">Season 1: Home Support Business Setup</option>
+                <option value="Season 2: Garment Construction & Sewing (Target Switch: May 20)">Season 2: Garment Construction & Sewing</option>
+                <option value="Season 3: Plant Tissue Culture Expansion (Target Switch: Jun 30)">Season 3: Plant Tissue Culture Expansion</option>
+            </select>
+            <div id="season-target-display" style="font-size: 0.75rem; color: var(--accent-purple); margin-top: 4px;"></div>
+        </div>
+
+        <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; color: var(--text-main);">Active Quests:</div>
+        <div class="checkbox-group" id="quest-board-list">
+            <!-- Dynamic Quests -->
+        </div>
+    </div>
+
+    <!-- Spinning Wheel Chore Picker -->
+    <div class="card">
+        <h2>🎲 Chore Wheel Picker</h2>
+        <div class="wheel-wrapper">
+            <canvas id="wheelCanvas" width="240" height="240"></canvas>
+            <button onclick="spinWheel()" style="max-width: 200px;">Spin Wheel! 🎯</button>
+        </div>
+        <div class="output-box" id="wheel-output" style="text-align: center; font-weight: bold;">Spin the wheel to pick a random micro-chore!</div>
+        
+        <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">Manage Wheel Chores:</div>
+            <div class="item-list" id="chore-item-list"></div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="new-chore-input" placeholder="Add custom chore..." style="margin:0;">
+                <button onclick="addChore()" style="width: auto; margin:0; padding: 0 14px;">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantry & Meal Matcher -->
+    <div class="card">
+        <h2>🍲 Pantry & Meal Matcher</h2>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            Log available food bank / pantry ingredients to match with quick recipes:
+        </div>
+        <div class="item-list" id="pantry-item-list"></div>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <input type="text" id="new-pantry-input" placeholder="e.g., canned beans, rice, pasta..." style="margin:0;">
+            <button onclick="addPantryItem()" style="width: auto; margin:0; padding: 0 14px;">Add Item</button>
+        </div>
+        <button onclick="matchMeals()" style="background: var(--accent-purple); color: white;">Match with Meals 🍳</button>
+        <div class="output-box" id="meal-match-output" style="margin-top: 10px;">Add ingredients above and click match to see available meal options.</div>
+    </div>
+
+    <!-- Reward Shop -->
+    <div class="card">
+        <h2>🛒 Reward Shop</h2>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+            Spend your earned coins on guilt-free unlocks:
+        </div>
+        <div class="item-list" id="reward-item-list"></div>
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <input type="text" id="new-reward-name" placeholder="Reward name..." style="margin:0; flex:2;">
+            <input type="text" id="new-reward-cost" placeholder="Cost (Coins)" style="margin:0; flex:1;">
+            <button onclick="addReward()" style="width: auto; margin:0; padding: 0 14px;">Add</button>
+        </div>
+    </div>
+
+    <!-- Indie Hackers Dev Log Generator -->
+    <div class="card">
+        <h2>📝 Indie Hackers Post Log</h2>
+        <button onclick="generateDevLog()">Generate Markdown Dev Log</button>
+        <textarea id="dev-log-output" rows="6" placeholder="Click generate to format your progress..." style="margin-top:10px;"></textarea>
+        <button onclick="copyDevLog()" style="background: var(--accent-success); color: #0b0f19;">Copy to Clipboard 📋</button>
+    </div>
+</div>
+
+<script>
+    // State Initialization
+    let state = JSON.parse(localStorage.getItem('lifeSimState')) || {
+        xp: 0,
+        coins: 0,
+        chores: [
+            "Clear one kitchen counter",
+            "Take out recycling bag",
+            "Wipe bathroom sink & mirror",
+            "3-minute stretch session",
+            "Put away 5 stray items"
+        ],
+        pantry: ["Canned beans", "Rice", "Pasta", "Canned tuna"],
+        rewards: [
+            { name: "1 Hour Video Games", cost: 30 },
+            { name: "Favorite Movie Night", cost: 50 },
+            { name: "Guilt-free Nap / Sleep-in", cost: 40 }
+        ],
+        quests: [
+            { text: "Complete morning hygiene protocol", xp: 15, coins: 5, done: false },
+            { text: "Work 30 mins on Business / Garment goal", xp: 35, coins: 15, done: false },
+            { text: "Clear 1 admin task / paperwork", xp: 20, coins: 10, done: false }
+        ],
+        activeSeason: "Season 1: Home Support Business Setup (Target Switch: Apr 15)"
+    };
+
+    function saveState() {
+        localStorage.setItem('lifeSimState', JSON.stringify(state));
+    }
+
+    function updateOS() {
+        // Leveling formula: Level N requires N * 100 XP
+        let level = 1;
+        let xpNeeded = 100;
+        let tempXp = state.xp;
+        
+        while (tempXp >= xpNeeded) {
+            tempXp -= xpNeeded;
+            level++;
+            xpNeeded = level * 100;
+        }
+
+        document.getElementById('level-val').innerText = level;
+        document.getElementById('xp-val').innerText = state.xp;
+        document.getElementById('coins-val').innerText = state.coins;
+        
+        const progressPercent = Math.min(100, (tempXp / xpNeeded) * 100);
+        document.getElementById('xp-progress-bar').style.width = progressPercent + '%';
+        document.getElementById('level-progress-text').innerText = `Level Progress: ${tempXp} / ${xpNeeded} XP`;
+        document.getElementById('next-level-target').innerText = `Next: Lvl ${level + 1}`;
+
+        saveState();
+        renderQuests();
+        renderChoresList();
+        renderPantryList();
+        renderRewardsList();
+        drawWheel();
+    }
+
+    function addXPAndCoins(xpGain, coinGain) {
+        state.xp += xpGain;
+        state.coins += coinGain;
+        updateOS();
+    }
+
+    // Energy Calculator
+    function calculateEnergy() {
+        const checkboxes = document.querySelectorAll('.energy-check');
+        let totalEP = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) totalEP += parseInt(cb.value);
+        });
+
+        let tier = "Tank / Resting State (HP Maintenance Only)";
+        let color = "var(--accent-danger)";
+        if (totalEP >= 8) {
+            tier = "Mage / High EP (Tackle Main Business Quest)";
+            color = "var(--accent-success)";
+        } else if (totalEP >= 5) {
+            tier = "Rogue / Medium EP (Handle Admin Quests & Tidy)";
+            color = "var(--accent-warning)";
+        }
+
+        document.getElementById('energy-result').innerHTML = `
+            <strong style="color: ${color}; font-size: 1rem;">Energy Capacity (EP) ${totalEP} / 10 EP</strong><br>
+            Recommended Tier: <em>${tier}</em>
+        `;
+    }
+
+    // Season Manager
+    function updateSeasonInfo() {
+        const select = document.getElementById('season-select');
+        state.activeSeason = select.value;
+        document.getElementById('season-target-display').innerText = `🗓️ Status: Active | ${state.activeSeason}`;
+        saveState();
+    }
+
+    // Quests
+    function renderQuests() {
+        const container = document.getElementById('quest-board-list');
+        container.innerHTML = '';
+        state.quests.forEach((q, idx) => {
+            container.innerHTML += `
+                <label style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <input type="checkbox" ${q.done ? 'checked' : ''} onchange="toggleQuest(${idx})">
+                    <span style="${q.done ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${q.text} <small style="color:var(--accent-success);">(+${q.xp} XP, +${q.coins} 🪙)</small></span>
+                </label>
+            `;
+        });
+    }
+
+    function toggleQuest(idx) {
+        state.quests[idx].done = !state.quests[idx].done;
+        if (state.quests[idx].done) {
+            addXPAndCoins(state.quests[idx].xp, state.quests[idx].coins);
+        } else {
+            state.xp = Math.max(0, state.xp - state.quests[idx].xp);
+            state.coins = Math.max(0, state.coins - state.quests[idx].coins);
+            updateOS();
+        }
+    }
+
+    // Spinning Wheel
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    let startAngle = 0;
+    let isSpinning = false;
+
+    function drawWheel() {
+        const numOptions = state.chores.length;
+        if (numOptions === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+        const arc = Math.PI * 2 / numOptions;
+        const colors = ['#38bdf8', '#c084fc', '#4ade80', '#facc15', '#f87171', '#34d399'];
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < numOptions; i++) {
+            const angle = startAngle + i * arc;
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.beginPath();
+            ctx.arc(120, 120, 110, angle, angle + arc, false);
+            ctx.arc(120, 120, 0, angle + arc, angle, true);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.save();
+            ctx.fillStyle = "#0b0f19";
+            ctx.font = "bold 11px sans-serif";
+            ctx.translate(120 + Math.cos(angle + arc / 2) * 70, 120 + Math.sin(angle + arc / 2) * 70);
+            ctx.rotate(angle + arc / 2 + Math.PI / 2);
+            let text = state.chores[i];
+            if (text.length > 12) text = text.substring(0, 10) + '...';
+            ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+            ctx.restore();
+        }
+
+        // Draw pointer
+        ctx.fillStyle = "#f8fafc";
+        ctx.beginPath();
+        ctx.moveTo(120 - 6, 5);
+        ctx.lineTo(120 + 6, 5);
+        ctx.lineTo(120, 20);
+        ctx.fill();
+    }
+
+    function spinWheel() {
+        if (isSpinning || state.chores.length === 0) return;
+        isSpinning = true;
+        let spinAngleTime = 0;
+        let totalSpinTime = Math.random() * 1000 + 3000;
+        let speed = Math.random() * 0.2 + 0.3;
+
+        function rotateWheel() {
+            spinAngleTime += 30;
+            if (spinAngleTime >= totalSpinTime) {
+                stopRotateWheel();
+                return;
+            }
+            let spinAngle = speed * (1 - spinAngleTime / totalSpinTime) * 20;
+            startAngle += spinAngle;
+            drawWheel();
+            setTimeout(rotateWheel, 30);
+        }
+        rotateWheel();
+    }
+
+    function stopRotateWheel() {
+        isSpinning = false;
+        const numOptions = state.chores.length;
+        const arc = Math.PI * 2 / numOptions;
+        const degrees = startAngle * 180 / Math.PI + 90;
+        const arcd = arc * 180 / Math.PI;
+        const index = Math.floor((360 - (degrees % 360)) / arcd) % numOptions;
+        
+        const selectedChore = state.chores[index];
+        document.getElementById('wheel-output').innerText = `✨ Quest Unlocked: ${selectedChore} (+15 XP, +5 🪙)`;
+        addXPAndCoins(15, 5);
+    }
+
+    function renderChoresList() {
+        const list = document.getElementById('chore-item-list');
+        list.innerHTML = '';
+        state.chores.forEach((c, idx) => {
+            list.innerHTML += `
+                <div class="item-row">
+                    <span>${c}</span>
+                    <button onclick="removeChore(${idx})">Delete</button>
+                </div>
+            `;
+        });
+        drawWheel();
+    }
+
+    function addChore() {
+        const input = document.getElementById('new-chore-input');
+        if (input.value.trim() !== '') {
+            state.chores.push(input.value.trim());
+            input.value = '';
+            renderChoresList();
+            saveState();
+        }
+    }
+
+    function removeChore(idx) {
+        state.chores.splice(idx, 1);
+        renderChoresList();
+        saveState();
+    }
+
+    // Pantry & Meals
+    function renderPantryList() {
+        const list = document.getElementById('pantry-item-list');
+        list.innerHTML = '';
+        state.pantry.forEach((item, idx) => {
+            list.innerHTML += `
+                <div class="item-row">
+                    <span>📦 ${item}</span>
+                    <button onclick="removePantry(${idx})">Remove</button>
+                </div>
+            `;
+        });
+    }
+
+    function addPantryItem() {
+        const input = document.getElementById('new-pantry-input');
+        if (input.value.trim() !== '') {
+            state.pantry.push(input.value.trim());
+            input.value = '';
+            renderPantryList();
+            saveState();
+        }
+    }
+
+    function removePantry(idx) {
+        state.pantry.splice(idx, 1);
+        renderPantryList();
+        saveState();
+    }
+
+    function matchMeals() {
+        const output = document.getElementById('meal-match-output');
+        if (state.pantry.length === 0) {
+            output.innerText = "Your pantry is empty! Add ingredients first.";
+            return;
+        }
+        output.innerHTML = `🍳 <strong>Matched Recipes based on your inventory:</strong><br>
+        - <em>Quick Bean & Rice Bowl:</em> Uses canned beans + rice.<br>
+        - <em>Garlic Butter Pasta:</em> Uses pasta + pantry staples.<br>
+        - <em>Tuna Rice Stir-fry:</em> Uses canned tuna + rice.`;
+    }
+
+    // Reward Shop
+    function renderRewardsList() {
+        const list = document.getElementById('reward-item-list');
+        list.innerHTML = '';
+        state.rewards.forEach((r, idx) => {
+            list.innerHTML += `
+                <div class="item-row">
+                    <span>🎁 ${r.name} <strong>(${r.cost} 🪙)</strong></span>
+                    <div style="display: flex; gap: 4px;">
+                        <button onclick="redeemReward(${idx})" style="background: var(--accent-success); color: #0b0f19; padding: 4px 8px; font-size:0.75rem;">Redeem</button>
+                        <button onclick="removeReward(${idx})" style="padding: 4px 8px; font-size:0.75rem;">X</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function addReward() {
+        const nameInput = document.getElementById('new-reward-name');
+        const costInput = document.getElementById('new-reward-cost');
+        if (nameInput.value.trim() !== '' && !isNaN(costInput.value)) {
+            state.rewards.push({ name: nameInput.value.trim(), cost: parseInt(costInput.value) });
+            nameInput.value = '';
+            costInput.value = '';
+            renderRewardsList();
+            saveState();
+        }
+    }
+
+    function removeReward(idx) {
+        state.rewards.splice(idx, 1);
+        renderRewardsList();
+        saveState();
+    }
+
+    function redeemReward(idx) {
+        const reward = state.rewards[idx];
+        if (state.coins >= reward.cost) {
+            state.coins -= reward.cost;
+            updateOS();
+            alert(`🎉 Successfully redeemed: ${reward.name}! Enjoy your reward.`);
+        } else {
+            alert(`❌ Not enough coins! You need ${reward.cost - state.coins} more coins.`);
+        }
+    }
+
+    // Indie Hackers Dev Log
+    function generateDevLog() {
+        const log = `### Life Simulator: Real Life Edition - Dev Log\n- **Active Season:** ${state.activeSeason}\n- **Character Level:** ${document.getElementById('level-val').innerText} (${state.xp} Total XP)\n- **Coins Banked:** ${state.coins} 🪙\n- **Status:** Maintaining daily survival baseline, managing home support business setup / skill acquisition quests, and executing micro-chore sprints.\n- **Next Patch:** Continuing quest grind and leveling up!`;
+        document.getElementById('dev-log-output').value = log;
+    }
+
+    function copyDevLog() {
+        const textarea = document.getElementById('dev-log-output');
+        textarea.select();
+        document.execCommand('copy');
+        alert('Dev log copied to clipboard! Ready to post on Indie Hackers.');
+    }
+
+    // Initial load
+    window.onload = function() {
+        document.getElementById('season-select').value = state.activeSeason;
+        updateSeasonInfo();
+        updateOS();
+    };
+</script>
+
+</body>
+</html>
